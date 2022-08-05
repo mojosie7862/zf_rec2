@@ -1,6 +1,6 @@
-
 #from cmd import IDENTCHARS
 import random
+#from signal import ITIMER_PROF
 #from sqlite3 import Time
 import tkinter
 import cv2
@@ -21,7 +21,7 @@ toggle = 1;
 recordingIndex = -999
 run_onset = 0
 cam_id = 0
-user_initial = "SM"
+user_initial = "(blank)"
 
 numruns = 3
 mindelay = 6
@@ -35,6 +35,7 @@ notes = "(blank)"
 pre_stimulus_time = 4
 pre_reward_time = 4
 reward_aversion_time = 4
+
 post_reward_time = 5
 tone_duration = 4
 
@@ -47,6 +48,12 @@ now = datetime.now()
 nowstr = now.strftime("%Y-%m-%d %H:%M:%S %p")
 now = time.time()
 
+forbidden = ["/", "<", ">", ":", '"', "\\", "|", "?", "*",
+             chr(0), chr(1), chr(2), chr(3), chr(4), chr(5), chr(6), chr(7),
+             chr(8), chr(9), chr(10), chr(11), chr(12), chr(13), chr(14), chr(15),
+             chr(16), chr(17), chr(18), chr(19), chr(20), chr(21), chr(22), chr(23),
+             chr(24), chr(25), chr(26), chr(27), chr(28), chr(29), chr(30), chr(31)]
+
 
 class VideoRecorder():
 
@@ -58,15 +65,14 @@ class VideoRecorder():
         self.fps = 20  # fps should be the minimum constant  rate at which the camera can
         self.fourcc = "XVID"  # capture images (with no decrease in speed over time; testing is required)
         self.frameSize = (640, 480)  # video formats and sizes also depend and vary according to the camera used
-        self.video_filename = fish_id + "_run_" + str(run) + "_" + paradigm + ".avi"
+        # self.video_filename = fish_id + "_run_" + str(run) + "_" + paradigm + ".avi"
+        self.video_filename = str(fish_id) + "_" + str(datetime.now().strftime('%Y-%m-%d_%H.%M %p')) + "_" + str(paradigm) + ".avi"
         self.video_cap = cv2.VideoCapture(self.device_index)
         self.video_writer = cv2.VideoWriter_fourcc(*self.fourcc)
         self.video_out = cv2.VideoWriter(self.video_filename, self.video_writer, self.fps, self.frameSize)
         self.frame_counts = 1
         self.start_time = time.time()
         self.font = cv2.FONT_HERSHEY_PLAIN
-        self.star = cv2.MARKER_STAR
-        self.diamond = cv2.MARKER_DIAMOND
         self.xy = 10, 10
 
     # Video starts being recorded
@@ -162,12 +168,8 @@ def start_PPTrecording(filename):
         global run_onset
         run_onset = time.time()
         run_now = datetime.now().replace(microsecond=0)
-        run_nowstr = '_'.join(str(run_now).split())
 
         print('run', i + 1, ':', this_run[0], 'ITI:', iti, "onset:", run_now)
-
-        # with open("transcript.csv","a+") as wfile:
-        #    wfile.write('run '+str(i + 1)+ ': '+ str(this_run[0])+ ' ITI:'+str(iti)+" onset:"+str(run_nowstr))
 
         video_thread = VideoRecorder(i, this_run[0])
         video_thread.start()
@@ -210,12 +212,7 @@ def start_PPTrecording(filename):
             app.SlideShowWindows(1).View.GotoSlide(1)
             pythoncom.CoUninitialize()
             print("Presentation finished.")
-            # with open("transcript.csv","a+") as wfile:
-            #    wfile.write("Presentation finished.\n")
             break
-        # with open("transcript.csv","a+") as wfile:
-        #    wfile.write("Filename: "+video_thread.video_filename+"\n\n")
-
 
 def main_():
     start_PPTrecording(filename)
@@ -228,8 +225,6 @@ def tkinter_start():
         global toggle
         toggle *= -1
         if (toggle == -1):
-            # with open("transcript.csv","a+") as wfile:
-            #    wfile.write("Emergency stop")
             print("Stopped Recording, exiting program")
             os._exit(0)
             cv2.destroyAllWindows()
@@ -258,13 +253,14 @@ def startup():
     panel1.pack(fill=tkinter.BOTH, expand=1)
 
     top1.geometry('360x440')
+    transcript_fn = 'trial'+ str(datetime.now().strftime('%Y-%m-%d_%H.%M %p')) + '.csv'
 
     def c():
-        if (not os.path.exists("transcript.csv")):
-            with open("transcript.csv", "a+") as wfile:
+        if (not os.path.exists(transcript_fn)):
+            with open(transcript_fn, "a+") as wfile:
                 wfile.write(
-                    "Fish ID, Gender, Date, Time, Initials, Num Runs, Min ITI, Max ITI, Post-reward Time, Analysis Period, Camera ID, Genotype, Notes, Pre-Stimulus Time, Pre-Reward Time, Reward/Aversion Time\n")
-        with open("transcript.csv", "a+") as wfile:
+                    "Fish ID, Gender, Date, Time, Initials, Num Runs, Min ITI, Max ITI, Post-reward Time, Tone Duration, Camera ID, Gender, Notes, Pre-stimulus Time, Pre-reward Time, Reward/Aversion Time\n")
+        with open(transcript_fn, "a+") as wfile:
             global fish_id
             if (not (txt7.get() == "")):
                 fish_id = txt7.get()
@@ -335,7 +331,6 @@ def startup():
             global genotype
             if (not (txt9.get() == "")):
                 genotype = txt9.get()
-
                 wfile.write(str(genotype) + ",")
             else:
                 wfile.write("(blank),")
@@ -343,28 +338,27 @@ def startup():
             global notes
             if (not (txt10.get() == "")):
                 notes = txt10.get()
-
                 wfile.write(str(notes) + ",")
             else:
                 wfile.write("(blank),")
 
             global pre_stimulus_time
             if (not (txt52.get() == "")):
-                pre_stimulus_time = txt52.get()
+                pre_stimulus_time = int(txt52.get())
                 wfile.write(str(pre_stimulus_time) + ",")
             else:
                 wfile.write("4,")
 
             global pre_reward_time
             if (not (txt53.get() == "")):
-                pre_reward_time = txt53.get()
+                pre_reward_time = int(txt53.get())
                 wfile.write(str(pre_reward_time) + ",")
             else:
                 wfile.write("4,")
 
             global reward_aversion_time
             if (not (txt54.get() == "")):
-                reward_aversion_time = txt54.get()
+                reward_aversion_time = int(txt54.get())
                 wfile.write(str(reward_aversion_time) + ",")
             else:
                 wfile.write("4,")
@@ -379,7 +373,14 @@ def startup():
         else:
             return False
 
+    def valfn(char):
+        if char in forbidden:
+            return False
+        else:
+            return True
+
     val2 = (top1.register(val))
+    valfn2 = (top1.register(valfn))
 
     panel2 = tkinter.PanedWindow(mainpanel, orient=tkinter.VERTICAL)
     panel2.pack()
@@ -421,14 +422,14 @@ def startup():
 
     panel52 = tkinter.PanedWindow(panel2, orient=tkinter.HORIZONTAL)
     panel52.pack(anchor="w")
-    label52 = tkinter.Label(top1, text="Pre-Stimulus Time: ", anchor="w", font=("Arial", 12))
+    label52 = tkinter.Label(top1, text="Pre-stimulus Time: ", anchor="w", font=("Arial", 12))
     panel52.add(label52)
     txt52 = tkinter.Entry(top1, validate='all', validatecommand=(val2, '%P'))
     panel52.add(txt52)
 
     panel53 = tkinter.PanedWindow(panel2, orient=tkinter.HORIZONTAL)
     panel53.pack(anchor="w")
-    label53 = tkinter.Label(top1, text="Pre-Reward Time: ", anchor="w", font=("Arial", 12))
+    label53 = tkinter.Label(top1, text="Pre-reward Time: ", anchor="w", font=("Arial", 12))
     panel53.add(label53)
     txt53 = tkinter.Entry(top1, validate='all', validatecommand=(val2, '%P'))
     panel53.add(txt53)
@@ -465,7 +466,7 @@ def startup():
     panel7.pack(anchor="w")
     label7 = tkinter.Label(top1, text="Fish ID: ", anchor="w", font=("Arial", 12))
     panel7.add(label7)
-    txt7 = tkinter.Entry(top1, validate='all')
+    txt7 = tkinter.Entry(top1, validate='all', validatecommand=(valfn2, '%P'))
     panel7.add(txt7)
 
     panel8 = tkinter.PanedWindow(panel2, orient=tkinter.HORIZONTAL)
@@ -496,3 +497,6 @@ def startup():
 
 startup()
 supermain()
+
+#start time and stop time of the program above
+#get all files within that time and put them in a new directory named by time of onset - str(datetime.now().strftime('%Y-%m-%d_%H.%M %p'))
