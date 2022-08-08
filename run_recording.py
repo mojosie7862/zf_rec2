@@ -1,14 +1,9 @@
-#from cmd import IDENTCHARS
 import random
-#from signal import ITIMER_PROF
-#from sqlite3 import Time
 import tkinter
 import cv2
 import threading
 import time
 import os
-#from jinja2 import PrefixLoader
-#from torch import initial_seed
 import win32com.client
 import win32api
 import pythoncom
@@ -66,7 +61,7 @@ class VideoRecorder():
         self.fourcc = "XVID"  # capture images (with no decrease in speed over time; testing is required)
         self.frameSize = (640, 480)  # video formats and sizes also depend and vary according to the camera used
         # self.video_filename = fish_id + "_run_" + str(run) + "_" + paradigm + ".avi"
-        self.video_filename = str(fish_id) + "_" + str(datetime.now().strftime('%Y-%m-%d_%H.%M %p')) + "_" + str(paradigm) + ".avi"
+        self.video_filename = str(fish_id) + "_" + str(datetime.now().strftime('%Y-%m-%d_%H.%M')) + "_" + str(paradigm) + ".avi"
         self.video_cap = cv2.VideoCapture(self.device_index)
         self.video_writer = cv2.VideoWriter_fourcc(*self.fourcc)
         self.video_out = cv2.VideoWriter(self.video_filename, self.video_writer, self.fps, self.frameSize)
@@ -216,7 +211,20 @@ def start_PPTrecording(filename):
 
 def main_():
     start_PPTrecording(filename)
+    endtime = time.time()
+    # start time and stop time of the program above
+    # get all files within that time and put them in a new directory named by time of onset
+    # str(datetime.now().strftime('%Y-%m-%d_%H.%M %p'))
 
+    directory = fish_id + "_trial_" + str(datetime.now().strftime('%Y-%m-%d_%H.%M'))
+    parent_dir = "C:/Users/Kanwal/PycharmProjects/zebradata/"
+    path = os.path.join(parent_dir, directory)
+    os.mkdir(path)
+    print("Directory '% s' created" % directory)
+
+    # files = Path(directory).glob('*')
+    # for file in files:
+    #     print(file)
 
 def tkinter_start():
     top = tkinter.Tk()
@@ -253,7 +261,7 @@ def startup():
     panel1.pack(fill=tkinter.BOTH, expand=1)
 
     top1.geometry('360x440')
-    transcript_fn = 'trial'+ str(datetime.now().strftime('%Y-%m-%d_%H.%M %p')) + '.csv'
+    transcript_fn = 'transcript'+ str(datetime.now().strftime('%Y-%m-%d_%H.%M %p')) + '.csv'
 
     def c():
         if (not os.path.exists(transcript_fn)):
@@ -498,5 +506,5 @@ def startup():
 startup()
 supermain()
 
-#start time and stop time of the program above
-#get all files within that time and put them in a new directory named by time of onset - str(datetime.now().strftime('%Y-%m-%d_%H.%M %p'))
+
+
