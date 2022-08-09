@@ -411,21 +411,21 @@ def startup():
 
     panel53 = tkinter.PanedWindow(panel2, orient=tkinter.HORIZONTAL)
     panel53.pack(anchor="w")
-    label53 = tkinter.Label(top1, text="Pre-reward Time: ", anchor="w", font=("Arial", 12))
+    label53 = tkinter.Label(top1, text="Pre-reward/aversion Time: ", anchor="w", font=("Arial", 12))
     panel53.add(label53)
     txt53 = tkinter.Entry(top1, validate='all', validatecommand=(val2, '%P'))
     panel53.add(txt53)
 
     panel54 = tkinter.PanedWindow(panel2, orient=tkinter.HORIZONTAL)
     panel54.pack(anchor="w")
-    label54 = tkinter.Label(top1, text="Reward/Aversion Time: ", anchor="w", font=("Arial", 12))
+    label54 = tkinter.Label(top1, text="Reward/aversion Time: ", anchor="w", font=("Arial", 12))
     panel54.add(label54)
     txt54 = tkinter.Entry(top1, validate='all', validatecommand=(val2, '%P'))
     panel54.add(txt54)
 
     panel100 = tkinter.PanedWindow(panel2, orient=tkinter.HORIZONTAL)
     panel100.pack(anchor="w")
-    label100 = tkinter.Label(top1, text="Post-reward time: ", anchor="w", font=("Arial", 12))
+    label100 = tkinter.Label(top1, text="Post-reward/aversion time: ", anchor="w", font=("Arial", 12))
     panel100.add(label100)
     txt100 = tkinter.Entry(top1, validate='all', validatecommand=(val2, '%P'))
     panel100.add(txt100)
@@ -453,7 +453,7 @@ def startup():
 
     panel8 = tkinter.PanedWindow(panel2, orient=tkinter.HORIZONTAL)
     panel8.pack(anchor="w")
-    label8 = tkinter.Label(top1, text="sex (M/F): ", anchor="w", font=("Arial", 12))
+    label8 = tkinter.Label(top1, text="Sex (M/F): ", anchor="w", font=("Arial", 12))
     panel8.add(label8)
     txt8 = tkinter.Entry(top1, validate='all')
     panel8.add(txt8)
