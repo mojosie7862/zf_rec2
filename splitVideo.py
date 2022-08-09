@@ -1,7 +1,7 @@
 import os
 import tkinter
 import warnings
-def getSplitLength(filename):
+def getSplitLength():
     global sl
     sl = -999
     def val(char):
@@ -15,7 +15,7 @@ def getSplitLength(filename):
     mainpanel3 = tkinter.PanedWindow(top2,orient=tkinter.HORIZONTAL)
     
     mainpanel3.pack(fill=tkinter.BOTH,expand = 1, side = tkinter.LEFT)
-    label3 = tkinter.Label(mainpanel3, text="Enter split for "+filename+" in seconds:     ",font=("Arial", 12))
+    label3 = tkinter.Label(mainpanel3, text="Enter split for file(s)"+" in seconds:     ",font=("Arial", 12))
     label3.pack(side = tkinter.LEFT)
     txt2 = tkinter.Entry(mainpanel3, validate='all',validatecommand=(val2, '%P'))
     txt2.config(width=5)
@@ -71,9 +71,9 @@ def oneFile():
         avifiles = []
         avifiles.append(filename)
         splittimes = {}
-        for i in avifiles:
-            x = getSplitLength(i)
-            
+        
+        x = getSplitLength()
+        for i in avifiles: 
             splittimes[i] = x
         startSplit(splittimes)
     except FileNotFoundError:
@@ -100,12 +100,12 @@ def multipleFile():
                 print(i)
                 avifiles.append(i)
         print(avifiles)
+        
+        x = getSplitLength()
         for i in avifiles:
-            x = getSplitLength(folder+i)
             splittimes[i] = x
             print(i)
         startSplit(splittimes)
-        os._exit(0)
     except FileNotFoundError:
         os._exit(0)
 
