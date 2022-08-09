@@ -83,22 +83,22 @@ def oneFile():
 def multipleFile():
     try:
         top1.destroy()
-        from tkinter.filedialog import askdirectory
+        from tkinter.filedialog import askopenfilenames
 
         tkinter.Tk().withdraw() 
-        folder = askdirectory()
-        folder = folder+"/"
-        print(folder)
-        if(folder=="" or folder=="/"):
+        # folder = askdirectory()
+        # folder = folder+"/"
+        # print(folder)
+        # if(folder=="" or folder=="/"):
+        #     os._exit(0)
+        # dirs = os.listdir(folder)
+        
+        avifiles = askopenfilenames(filetypes=[("*.avi", "*.AVI")])
+        print(avifiles)
+        if(len(avifiles)==0):
             os._exit(0)
-        dirs = os.listdir(folder)
         #print(dirs)
-        avifiles = []
         splittimes = {}
-        for i in dirs:
-            if(len(i)>3 and (i[-4:]==".avi" or i[-4:]==".AVI")):
-                print(i)
-                avifiles.append(i)
         print(avifiles)
         
         x = getSplitLength()
@@ -121,11 +121,11 @@ label6 = tkinter.Label(panel1, text="SplitVideo",justify=tkinter.CENTER,font=("A
 label6.place(relx = 0.5, anchor=tkinter.CENTER)
 label6.config(font=("Arial", 24))
 panel1.add(label6)
-btn1 = tkinter.Button(top1, text ="Split .avi File", command=oneFile)
+btn1 = tkinter.Button(top1, text ="Split one .avi File", command=oneFile)
 btn1.config(width=50);
 
 
-btn2 = tkinter.Button(top1, text ="Split .avi files in a Folder", command=multipleFile)
+btn2 = tkinter.Button(top1, text ="Split multiple .avi files in a Folder", command=multipleFile)
 btn2.config(width=50);
 
 btn3 = tkinter.Button(top1, text ="Exit", command=bye)
