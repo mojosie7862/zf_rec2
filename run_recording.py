@@ -9,6 +9,7 @@ import win32api
 import pythoncom
 from datetime import datetime
 import sys
+import shutil
 
 camwidth = 640
 camheight = 480
@@ -48,12 +49,13 @@ forbidden = ["/", "<", ">", ":", '"', "\\", "|", "?", "*",
              chr(8), chr(9), chr(10), chr(11), chr(12), chr(13), chr(14), chr(15),
              chr(16), chr(17), chr(18), chr(19), chr(20), chr(21), chr(22), chr(23),
              chr(24), chr(25), chr(26), chr(27), chr(28), chr(29), chr(30), chr(31)]
-
+global video_files
+video_files = []
 
 class VideoRecorder():
 
     # Video class based on openCV
-    def __init__(self, run, paradigm):
+    def __init__(self, paradigm):
 
         self.open = True
         self.device_index = cam_id
@@ -149,7 +151,8 @@ def start_PPTrecording(filename):
     # 6-min novel environment test
     if len(sys.argv) > 1:
         if sys.argv[1] == 'novel':
-            novtest_vthread = VideoRecorder('novelenv', 'test')
+            novtest_vthread = VideoRecorder('novelenvtest')
+            video_files.append(novtest_vthread.video_filename)
             app.SlideShowWindows(1).View.GotoSlide(1)
             novtest_vthread.start()
             print("novel environment test")
@@ -166,7 +169,8 @@ def start_PPTrecording(filename):
 
         print('run', i + 1, ':', this_run[0], 'ITI:', iti, "onset:", run_now)
 
-        video_thread = VideoRecorder(i, this_run[0])
+        video_thread = VideoRecorder(this_run[0])
+        video_files.append(video_thread.video_filename)
         video_thread.start()
 
         win32api.Sleep((pre_reward_time * 1000) + 2000)  # pre-stimulus time
@@ -211,20 +215,21 @@ def start_PPTrecording(filename):
 
 def main_():
     start_PPTrecording(filename)
-    endtime = time.time()
-    # start time and stop time of the program above
-    # get all files within that time and put them in a new directory named by time of onset
-    # str(datetime.now().strftime('%Y-%m-%d_%H.%M %p'))
-
+    video_files.append(transcript_fn)
     directory = fish_id + "_trial_" + str(datetime.now().strftime('%Y-%m-%d_%H.%M'))
     parent_dir = "C:/Users/Kanwal/PycharmProjects/zebradata/"
     path = os.path.join(parent_dir, directory)
     os.mkdir(path)
     print("Directory '% s' created" % directory)
 
-    # files = Path(directory).glob('*')
-    # for file in files:
-    #     print(file)
+    for file in video_files:
+        original = parent_dir + file
+        target = path + "/" + file
+        shutil.move(original, target)
+    print("Trial files organized.")
+
+    B.invoke()
+
 
 def tkinter_start():
     top = tkinter.Tk()
@@ -236,7 +241,7 @@ def tkinter_start():
             print("Stopped Recording, exiting program")
             os._exit(0)
             cv2.destroyAllWindows()
-
+    global B
     B = tkinter.Button(top, text="Stop Recording", command=action)
 
     B.pack()
@@ -261,13 +266,14 @@ def startup():
     panel1.pack(fill=tkinter.BOTH, expand=1)
 
     top1.geometry('360x440')
-    transcript_fn = 'transcript'+ str(datetime.now().strftime('%Y-%m-%d_%H.%M %p')) + '.csv'
+    global transcript_fn
+    transcript_fn = 'transcript'+ str(datetime.now().strftime('%Y-%m-%d_%H.%M')) + '.csv'
 
     def c():
         if (not os.path.exists(transcript_fn)):
             with open(transcript_fn, "a+") as wfile:
                 wfile.write(
-                    "Fish ID, Gender, Date, Time, Initials, Num Runs, Min ITI, Max ITI, Post-reward Time, Tone Duration, Camera ID, Gender, Notes, Pre-stimulus Time, Pre-reward Time, Reward/Aversion Time\n")
+                    "fish_id, gender, date, time, exp_init, num_runs, min_iti, max_iti, post_rew_av_t, tone_dur, cam_id, notes, pre_stim_t, pre_rew_t, rew_av_t\n")
         with open(transcript_fn, "a+") as wfile:
             global fish_id
             if (not (txt7.get() == "")):
