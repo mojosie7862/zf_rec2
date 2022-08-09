@@ -17,16 +17,16 @@ camheight = 480
 toggle = 1;
 recordingIndex = -999
 cam_id = 0
-exp_init = "(blank)"
+exp_init = ""
 
 num_runs = 3
 min_iti = 6
 max_iti = 10
 
-fish_id = "Z1"
-sex = "(blank)"
-genotype = "(blank)"
-notes = "(blank)"
+fish_id = "Ztest"
+sex = ""
+genotype = ""
+notes = ""
 
 cue_t = 6
 tone_dur = 4
