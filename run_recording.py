@@ -28,12 +28,12 @@ sex = ""
 genotype = ""
 notes = ""
 
-cue_t = 6
+cue_t = 12.25
 tone_dur = 4
 pre_stim_t = 4
-pre_rew_av_t = 4
-rew_av_t = 4
-post_rew_av_t = 5
+pre_rew_av_t = 2
+rew_av_t = 10
+post_rew_av_t = 4
 
 filename = r'C:\Users\Kanwal\PycharmProjects\zebradata\paradigms.pptx'
 
@@ -129,17 +129,17 @@ class VideoRecorder():
 
 def start_PPTrecording(filename):
 
-    paradigm_slides = [['cf', 12], ['dfm', 7], ['ufm', 2]]
+    paradigm_slides = [['cf', 16], ['dfm', 9], ['ufm', 2]]
     all_runs = [['cf', 0], ['dfm', 0], ['ufm', 0]]
 
-    fixed_times = [1, cue_t*1000, 1, 1]
+    fixed_times = [3000, 250, 3000, 6000, 1]
     pythoncom.CoInitialize()
     app = win32com.client.Dispatch("PowerPoint.Application")
     app.Visible = 1
     app.Presentations.Open(FileName=filename)
     app.ActivePresentation.SlideShowSettings.Run()
 
-    nov_test_len = 60
+    nov_test_len = 120
     print("Trial Onset:", nowstr)
     fixed = sum(fixed_times) / 1000
     vars = fixed + pre_stim_t + tone_dur + pre_rew_av_t + rew_av_t + post_rew_av_t
@@ -180,28 +180,30 @@ def start_PPTrecording(filename):
         video_thread = VideoRecorder(this_run[0])
         video_files.append(video_thread.video_filename)
         run_data = [video_thread.video_filename, fish_id, sex, genotype, run_date, run_time, exp_init,
-                                     num_runs, min_iti, max_iti, cam_id, notes,
+                                     num_runs, min_iti, max_iti, iti, cam_id, notes,
                                      pre_stim_t, cue_t, tone_dur, pre_rew_av_t, rew_av_t, post_rew_av_t, 'na']
         trial_data.append(run_data)
 
         video_thread.start()
 
-        win32api.Sleep((pre_rew_av_t * 1000) + 2000)  # pre-stimulus time
+        win32api.Sleep((pre_stim_t * 1000) + 2000)  # pre-stimulus time
         app.SlideShowWindows(1).View.GotoSlide(this_run[1])  # advance to screen cue
-        win32api.Sleep(fixed_times[0])  # fixed 1
-        app.SlideShowWindows(1).View.Next()  # play screen cue
-        win32api.Sleep(fixed_times[1])  # fixed 2
+        win32api.Sleep(fixed_times[0])  # 3s blue
+        app.SlideShowWindows(1).View.Next()  # next
+        win32api.Sleep(fixed_times[1])  # .25s black
+        app.SlideShowWindows(1).View.Next()  # next
+        win32api.Sleep(fixed_times[2])  # 3s blue
         app.SlideShowWindows(1).View.Next()  # advance to sound slide
-        win32api.Sleep(fixed_times[2])  # fixed 3
+        win32api.Sleep(fixed_times[3]) # 6s black
         app.SlideShowWindows(1).View.Next()  # play CF/FM
         global tonePlaying
         tonePlaying = 1
         win32api.Sleep(tone_dur * 1000)  # Analysis Period
         tonePlaying = 0
         app.SlideShowWindows(1).View.Next()  # advance to black slide
-        win32api.Sleep(pre_stim_t * 1000)  # pre_rew_av_t interval
+        win32api.Sleep(pre_rew_av_t * 1000)  # pre_rew_av_t interval
         app.SlideShowWindows(1).View.Next()  # advance to video slide
-        win32api.Sleep(fixed_times[3])  # fixed 5
+        win32api.Sleep(fixed_times[4])  # instant
         app.SlideShowWindows(1).View.Next()  # start video
         global videoPlaying
         videoPlaying = 1
@@ -218,7 +220,9 @@ def start_PPTrecording(filename):
 
         time.sleep(post_rew_av_t)
         video_thread.stop()
-        time.sleep(iti - post_rew_av_t)
+
+        if i != num_runs-1:
+            time.sleep(iti - post_rew_av_t)
 
         if len(all_runs) == 0:
             app.SlideShowWindows(1).View.GotoSlide(1)
@@ -231,7 +235,7 @@ def main_():
 
     transcript_fn = 'transcript' + str(datetime.now().strftime('%Y-%m-%d_%H.%M')) + '.csv'
     trial_df = pd.DataFrame(trial_data, columns=['vid_file', 'fish_id', 'sex', 'genotype', 'date', 'time',
-                                                 'exp_init','num_runs', 'min_iti', 'max_iti', 'cam_id', 'notes',
+                                                 'exp_init','num_runs', 'min_iti', 'max_iti', 'iti', 'cam_id', 'notes',
                                                  'pre_stim_t', 'cue_t', 'tone_dur', 'pre_rew_av_t', 'rew_av_t',
                                                  'post_rew_av_t', 'novtest_len'])
     trial_df.to_csv(transcript_fn)
