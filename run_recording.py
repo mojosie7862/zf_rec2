@@ -52,6 +52,12 @@ video_files = []
 global trial_data
 trial_data = []
 
+global tone_frames
+tone_frames = []
+
+global video_frames
+video_frames = []
+
 now = datetime.now()
 nowstr = now.strftime("%Y-%m-%d %H:%M:%S %p")
 
@@ -62,7 +68,7 @@ class VideoRecorder():
 
         self.open = True
         self.device_index = cam_id
-        self.fps = 20  # fps should be the minimum constant  rate at which the camera can
+        self.fps = 60  # fps should be the minimum constant  rate at which the camera can
         self.fourcc = "XVID"  # capture images (with no decrease in speed over time; testing is required)
         self.frameSize = (640, 480)  # video formats and sizes also depend and vary according to the camera used
         self.video_filename = str(fish_id) + "_" + str(datetime.now().strftime('%Y-%m-%d_%H.%M')) + "_" + str(paradigm) + ".avi"
@@ -76,24 +82,26 @@ class VideoRecorder():
 
     # Video starts being recorded
     def record(self):
-
+        frame_counter = 0
         while (self.open == True):
             ret, video_frame = self.video_cap.read()
-            if (tonePlaying == 1):
+            frame_counter += 1
+            if tonePlaying == 1:
                 cv2.putText(video_frame, str(datetime.now()), (20, 40),
-                            self.font, 2, (0, 0, 0), 2, cv2.LINE_AA)
+                            self.font, 2, (255, 255, 255), 2, cv2.LINE_AA)
                 cv2.circle(video_frame, (620, 20), 20, (0, 0, 255), -1)
+                tone_frames.append(frame_counter)
 
             elif videoPlaying == 1:
                 cv2.putText(video_frame, str(datetime.now()), (20, 40),
-                            self.font, 2, (0, 0, 0), 2, cv2.LINE_AA)
+                            self.font, 2, (255, 255, 255), 2, cv2.LINE_AA)
                 cv2.rectangle(video_frame, (580, 10), (620, 40), (255, 0, 0), -1)
-
+                video_frames.append(frame_counter)
             else:
                 cv2.putText(video_frame, str(datetime.now()), (20, 40),
                             self.font, 2, (255, 255, 255), 2, cv2.LINE_AA)
 
-            if (ret == True):
+            if ret == True:
 
                 self.video_out.write(video_frame)
                 self.frame_counts += 1
@@ -104,9 +112,6 @@ class VideoRecorder():
 
             else:
                 break
-
-    def markerOn(self):
-        cv2.drawMarker()
 
     # Finishes the video recording therefore the thread too
     def stop(self):
@@ -129,8 +134,8 @@ class VideoRecorder():
 
 def start_PPTrecording(filename):
 
-    paradigm_slides = [['cf', 16], ['dfm', 9], ['ufm', 2]]
-    all_runs = [['cf', 0], ['dfm', 0], ['ufm', 0]]
+    paradigm_slides = [['cf', 9], ['dfm', 2]]
+    all_runs = [['cf', 0], ['dfm', 0]]
 
     fixed_times = [3000, 250, 3000, 6000, 1]
     pythoncom.CoInitialize()
@@ -139,7 +144,7 @@ def start_PPTrecording(filename):
     app.Presentations.Open(FileName=filename)
     app.ActivePresentation.SlideShowSettings.Run()
 
-    nov_test_len = 120
+    nov_test_len = 360
     print("Trial Onset:", nowstr)
     fixed = sum(fixed_times) / 1000
     vars = fixed + pre_stim_t + tone_dur + pre_rew_av_t + rew_av_t + post_rew_av_t
@@ -158,7 +163,7 @@ def start_PPTrecording(filename):
             run_time = today.strftime('%H.%M.%S')
             novtest_vthread = VideoRecorder('novelenvtest')
             novtest_data = [novtest_vthread.video_filename, fish_id, sex, genotype, run_date, run_time, exp_init,
-                            'na', 'na', 'na', cam_id, notes, 'na', 'na', 'na', 'na', 'na', 'na', nov_test_len]
+                            'na', 'na', 'na', cam_id, notes, 'na', 'na', 'na', 'na', 'na', 'na', 'na', 'na', 'na', 'na', 'na', nov_test_len]
             trial_data.append(novtest_data)
             video_files.append(novtest_vthread.video_filename)
             app.SlideShowWindows(1).View.GotoSlide(1)
@@ -179,10 +184,6 @@ def start_PPTrecording(filename):
 
         video_thread = VideoRecorder(this_run[0])
         video_files.append(video_thread.video_filename)
-        run_data = [video_thread.video_filename, fish_id, sex, genotype, run_date, run_time, exp_init,
-                                     num_runs, min_iti, max_iti, iti, cam_id, notes,
-                                     pre_stim_t, cue_t, tone_dur, pre_rew_av_t, rew_av_t, post_rew_av_t, 'na']
-        trial_data.append(run_data)
 
         video_thread.start()
 
@@ -211,10 +212,16 @@ def start_PPTrecording(filename):
         videoPlaying = 0
         app.SlideShowWindows(1).View.Next()  # advance to black slide
 
+        run_data = [video_thread.video_filename, fish_id, sex, genotype, run_date, run_time, exp_init,
+                    num_runs, min_iti, max_iti, iti, cam_id, notes, pre_stim_t, cue_t, tone_dur, pre_rew_av_t,
+                    rew_av_t, post_rew_av_t, min(tone_frames), max(tone_frames), min(video_frames), max(video_frames),
+                    'na']
+        trial_data.append(run_data)
+
         for y, j in enumerate(all_runs):
             if this_run[0] == j[0]:
                 j[1] += 1
-            if j[1] == num_runs / 3:
+            if j[1] == num_runs / 2:
                 paradigm_slides.pop(y)
                 all_runs.pop(y)
 
@@ -237,7 +244,8 @@ def main_():
     trial_df = pd.DataFrame(trial_data, columns=['vid_file', 'fish_id', 'sex', 'genotype', 'date', 'time',
                                                  'exp_init','num_runs', 'min_iti', 'max_iti', 'iti', 'cam_id', 'notes',
                                                  'pre_stim_t', 'cue_t', 'tone_dur', 'pre_rew_av_t', 'rew_av_t',
-                                                 'post_rew_av_t', 'novtest_len'])
+                                                 'post_rew_av_t','tone_start_frame', 'tone_stop_frame',
+                                                 'video_start_frame', 'video_stop_frame', 'novtest_len'])
     trial_df.to_csv(transcript_fn)
 
     video_files.append(transcript_fn)
