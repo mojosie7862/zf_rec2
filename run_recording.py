@@ -29,7 +29,7 @@ genotype = ""
 notes = ""
 
 cue_t = 12.25
-tone_dur = 4
+tone_dur = 6.5
 pre_stim_t = 4
 pre_rew_av_t = 2
 rew_av_t = 10
@@ -144,33 +144,34 @@ def start_PPTrecording(filename):
     app.Presentations.Open(FileName=filename)
     app.ActivePresentation.SlideShowSettings.Run()
 
-    nov_test_len = 360
+    basetest_len = 360
     print("Trial Onset:", nowstr)
     fixed = sum(fixed_times) / 1000
     vars = fixed + pre_stim_t + tone_dur + pre_rew_av_t + rew_av_t + post_rew_av_t
     if len(sys.argv) > 1:
-        if sys.argv[1] == 'novel':
-            vars += nov_test_len
+        if sys.argv[1] == 'baseline_tests':
+            vars += basetest_len*2
     trial_min = (vars + min_iti) * num_runs
     trial_max = (vars + max_iti) * num_runs
     print("Length of Trial:", round((trial_min / 60), 1), "-", round((trial_max / 60), 1), "minutes")
+    print("Number of Runs:", num_runs)
 
-    # 6-min novel environment test
+    # 1st baseline recording test
     if len(sys.argv) > 1:
-        if sys.argv[1] == 'novel':
+        if sys.argv[1] == 'baseline_tests':
             today = datetime.today()
             run_date = today.strftime('%m-%d-%y')
             run_time = today.strftime('%H.%M.%S')
-            novtest_vthread = VideoRecorder('novelenvtest')
-            novtest_data = [novtest_vthread.video_filename, fish_id, sex, genotype, run_date, run_time, exp_init,
-                            'na', 'na', 'na', cam_id, notes, 'na', 'na', 'na', 'na', 'na', 'na', 'na', 'na', 'na', 'na', 'na', nov_test_len]
-            trial_data.append(novtest_data)
-            video_files.append(novtest_vthread.video_filename)
+            basetest1_vthread = VideoRecorder('baseline_1')
+            basetest1_data = [basetest1_vthread.video_filename, fish_id, sex, genotype, run_date, run_time, exp_init,
+                            'na', 'na', 'na', cam_id, notes, 'na', 'na', 'na', 'na', 'na', 'na', 'na', 'na', 'na', 'na', 'na', basetest_len]
+            trial_data.append(basetest1_data)
+            video_files.append(basetest1_vthread.video_filename)
             app.SlideShowWindows(1).View.GotoSlide(1)
-            novtest_vthread.start()
-            print("novel environment test")
-            time.sleep(nov_test_len)  # change to 360 for true trials
-            novtest_vthread.stop()
+            basetest1_vthread.start()
+            print("1st baseline recording...")
+            time.sleep(basetest_len)  # change to 360 for true trials
+            basetest1_vthread.stop()
 
     # loop through paradigm presentations and record from pre_stim_t to post rew_av_t
     for i in range(num_runs):
@@ -233,6 +234,22 @@ def start_PPTrecording(filename):
 
         if len(all_runs) == 0:
             app.SlideShowWindows(1).View.GotoSlide(1)
+            if len(sys.argv) > 1:
+                if sys.argv[1] == 'baseline_tests':
+                    today = datetime.today()
+                    run_date = today.strftime('%m-%d-%y')
+                    run_time = today.strftime('%H.%M.%S')
+                    basetest2_vthread = VideoRecorder('baseline_2')
+                    basetest2_data = [basetest2_vthread.video_filename, fish_id, sex, genotype, run_date, run_time,
+                                      exp_init, 'na', 'na', 'na', cam_id, notes, 'na', 'na', 'na', 'na', 'na', 'na',
+                                      'na', 'na', 'na', 'na', 'na', basetest_len]
+                    trial_data.append(basetest2_data)
+                    video_files.append(basetest2_vthread.video_filename)
+                    app.SlideShowWindows(1).View.GotoSlide(1)
+                    basetest2_vthread.start()
+                    print("2nd baseline recording...")
+                    time.sleep(basetest_len)
+                    basetest2_vthread.stop()
             pythoncom.CoUninitialize()
             print("Presentation finished.")
             break
@@ -245,7 +262,7 @@ def main_():
                                                  'exp_init','num_runs', 'min_iti', 'max_iti', 'iti', 'cam_id', 'notes',
                                                  'pre_stim_t', 'cue_t', 'tone_dur', 'pre_rew_av_t', 'rew_av_t',
                                                  'post_rew_av_t','tone_start_frame', 'tone_stop_frame',
-                                                 'video_start_frame', 'video_stop_frame', 'novtest_len'])
+                                                 'video_start_frame', 'video_stop_frame', 'basetest_len'])
     trial_df.to_csv(transcript_fn)
 
     video_files.append(transcript_fn)
@@ -253,12 +270,17 @@ def main_():
     parent_dir = "C:/Users/Kanwal/PycharmProjects/zebradata/"
     path = os.path.join(parent_dir, directory)
     os.mkdir(path)
-    print("Directory '% s' created" % directory)
+    print("Directory '% s' created (found in C:/Users/Kanwal/Dropbox/aud_discrim_cond_data)" % directory)
+
 
     for file in video_files:
         original = parent_dir + file
         target = path + "/" + file
         shutil.move(original, target)
+
+    original = parent_dir + directory
+    target = 'C:/Users/Kanwal/Dropbox/aud_discrim_cond_data/' + directory
+    shutil.move(original, target)
     print("Trial files organized.")
 
     B.invoke()
@@ -421,6 +443,13 @@ def startup():
     txt52 = tkinter.Entry(top1, validate='all', validatecommand=(val2, '%P'))
     panel52.add(txt52)
 
+    panel101 = tkinter.PanedWindow(panel2, orient=tkinter.HORIZONTAL)
+    panel101.pack(anchor="w")
+    label101 = tkinter.Label(top1, text="Tone Duration: ", anchor="w", font=("Arial", 12))
+    panel101.add(label101)
+    txt101 = tkinter.Entry(top1, validate='all', validatecommand=(val2, '%P'))
+    panel101.add(txt101)
+
     panel53 = tkinter.PanedWindow(panel2, orient=tkinter.HORIZONTAL)
     panel53.pack(anchor="w")
     label53 = tkinter.Label(top1, text="Pre-reward/aversion Time: ", anchor="w", font=("Arial", 12))
@@ -441,13 +470,6 @@ def startup():
     panel100.add(label100)
     txt100 = tkinter.Entry(top1, validate='all', validatecommand=(val2, '%P'))
     panel100.add(txt100)
-
-    panel101 = tkinter.PanedWindow(panel2, orient=tkinter.HORIZONTAL)
-    panel101.pack(anchor="w")
-    label101 = tkinter.Label(top1, text="Tone Duration: ", anchor="w", font=("Arial", 12))
-    panel101.add(label101)
-    txt101 = tkinter.Entry(top1, validate='all', validatecommand=(val2, '%P'))
-    panel101.add(txt101)
 
     panel6 = tkinter.PanedWindow(panel2, orient=tkinter.VERTICAL)
     panel6.pack(anchor="w")
@@ -491,6 +513,4 @@ def startup():
 
 startup()
 supermain()
-
-
 
