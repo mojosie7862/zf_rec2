@@ -210,7 +210,7 @@ def start_PPTrecording(filename):
         videoPlaying = 1
         win32api.Sleep(rew_av_t * 1000)  # rew_av_t time
         videoPlaying = 0
-        app.SlideShowWindows(1).View.Next()  # advance to black slide
+        app.SlideShowWindows(1).View.GotoSlide(1)  # advance to background slide
 
         run_data = [video_thread.video_filename, fish_id, sex, genotype, run_date, run_time, exp_init,
                     num_runs, min_iti, max_iti, iti, cam_id, notes, pre_stim_t, cue_t, tone_dur, pre_rew_av_t,
