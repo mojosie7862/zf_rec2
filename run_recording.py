@@ -164,7 +164,7 @@ def start_PPTrecording(filename):
             run_time = today.strftime('%H.%M.%S')
             basetest1_vthread = VideoRecorder('baseline_1')
             basetest1_data = [basetest1_vthread.video_filename, fish_id, sex, genotype, run_date, run_time, exp_init,
-                            'na', 'na', 'na', cam_id, notes, 'na', 'na', 'na', 'na', 'na', 'na', 'na', 'na', 'na', 'na', 'na', basetest_len]
+                            'na', 'na', 'na', 'na', cam_id, notes, 'na', 'na', 'na', 'na', 'na', 'na', 'na', 'na', 'na', 'na', 'na', basetest_len]
             trial_data.append(basetest1_data)
             video_files.append(basetest1_vthread.video_filename)
             app.SlideShowWindows(1).View.GotoSlide(1)
@@ -190,13 +190,13 @@ def start_PPTrecording(filename):
 
         win32api.Sleep((pre_stim_t * 1000) + 2000)  # pre-stimulus time
         app.SlideShowWindows(1).View.GotoSlide(this_run[1])  # advance to screen cue
-        win32api.Sleep(fixed_times[0])  # 3s blue
+        win32api.Sleep(fixed_times[0])  # 3s cue color
         app.SlideShowWindows(1).View.Next()  # next
-        win32api.Sleep(fixed_times[1])  # .25s black
+        win32api.Sleep(fixed_times[1])  # .25s natural slide
         app.SlideShowWindows(1).View.Next()  # next
-        win32api.Sleep(fixed_times[2])  # 3s blue
+        win32api.Sleep(fixed_times[2])  # 3s cue color
         app.SlideShowWindows(1).View.Next()  # advance to sound slide
-        win32api.Sleep(fixed_times[3]) # 6s black
+        win32api.Sleep(fixed_times[3]) # 6s natural slide
         app.SlideShowWindows(1).View.Next()  # play CF/FM
         global tonePlaying
         tonePlaying = 1
@@ -211,7 +211,7 @@ def start_PPTrecording(filename):
         videoPlaying = 1
         win32api.Sleep(rew_av_t * 1000)  # rew_av_t time
         videoPlaying = 0
-        app.SlideShowWindows(1).View.Next()  # advance to black slide
+        app.SlideShowWindows(1).View.Next()  # advance to natural slide
 
         run_data = [video_thread.video_filename, fish_id, sex, genotype, run_date, run_time, exp_init,
                     num_runs, min_iti, max_iti, iti, cam_id, notes, pre_stim_t, cue_t, tone_dur, pre_rew_av_t,
@@ -263,6 +263,7 @@ def main_():
                                                  'pre_stim_t', 'cue_t', 'tone_dur', 'pre_rew_av_t', 'rew_av_t',
                                                  'post_rew_av_t','tone_start_frame', 'tone_stop_frame',
                                                  'video_start_frame', 'video_stop_frame', 'basetest_len'])
+    trial_df.index.name = 'run_id'
     trial_df.to_csv(transcript_fn)
 
     video_files.append(transcript_fn)
