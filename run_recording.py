@@ -164,7 +164,8 @@ def start_PPTrecording(filename):
             run_time = today.strftime('%H.%M.%S')
             basetest1_vthread = VideoRecorder('baseline_1')
             basetest1_data = [basetest1_vthread.video_filename, fish_id, sex, genotype, run_date, run_time, exp_init,
-                            'na', 'na', 'na', 'na', cam_id, notes, 'na', 'na', 'na', 'na', 'na', 'na', 'na', 'na', 'na', 'na', 'na', basetest_len]
+                              'na', 'na', 'na', 'na', cam_id, notes, 'na', 'na', 'na', 'na', 'na', 'na', 'na', 'na',
+                              'na', 'na', basetest_len]
             trial_data.append(basetest1_data)
             video_files.append(basetest1_vthread.video_filename)
             app.SlideShowWindows(1).View.GotoSlide(1)
@@ -241,8 +242,8 @@ def start_PPTrecording(filename):
                     run_time = today.strftime('%H.%M.%S')
                     basetest2_vthread = VideoRecorder('baseline_2')
                     basetest2_data = [basetest2_vthread.video_filename, fish_id, sex, genotype, run_date, run_time,
-                                      exp_init, 'na', 'na', 'na', cam_id, notes, 'na', 'na', 'na', 'na', 'na', 'na',
-                                      'na', 'na', 'na', 'na', 'na', basetest_len]
+                                      exp_init, 'na', 'na', 'na', 'na', cam_id, notes, 'na', 'na', 'na', 'na', 'na', 'na',
+                                      'na', 'na', 'na', 'na', basetest_len]
                     trial_data.append(basetest2_data)
                     video_files.append(basetest2_vthread.video_filename)
                     app.SlideShowWindows(1).View.GotoSlide(1)
