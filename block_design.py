@@ -35,8 +35,9 @@ pre_rew_av_t = 2
 rew_av_t = 10
 post_rew_av_t = 4
 
-filename = r'C:\Users\Kanwal\PycharmProjects\zebradata\paradigms.pptx'
+filename = r'C:\Users\Kanwal\PycharmProjects\zebradata\paradigms_white.pptx'
 
+viscuePlaying = 0
 tonePlaying = 0
 videoPlaying = 0
 
@@ -51,6 +52,9 @@ video_files = []
 
 global trial_data
 trial_data = []
+
+global cue_frames
+cue_frames = []
 
 global tone_frames
 tone_frames = []
@@ -85,8 +89,14 @@ class VideoRecorder():
         frame_counter = 0
         while (self.open == True):
             ret, video_frame = self.video_cap.read()
+
             frame_counter += 1
-            if tonePlaying == 1:
+            if viscuePlaying == 1:
+                cv2.putText(video_frame, str(datetime.now()), (20, 40),
+                            self.font, 2, (255, 255, 255), 2, cv2.LINE_AA)
+                cue_frames.append(frame_counter)
+
+            elif tonePlaying == 1:
                 cv2.putText(video_frame, str(datetime.now()), (20, 40),
                             self.font, 2, (255, 255, 255), 2, cv2.LINE_AA)
                 cv2.circle(video_frame, (620, 20), 20, (0, 0, 255), -1)
@@ -97,6 +107,7 @@ class VideoRecorder():
                             self.font, 2, (255, 255, 255), 2, cv2.LINE_AA)
                 cv2.rectangle(video_frame, (580, 10), (620, 40), (255, 0, 0), -1)
                 video_frames.append(frame_counter)
+
             else:
                 cv2.putText(video_frame, str(datetime.now()), (20, 40),
                             self.font, 2, (255, 255, 255), 2, cv2.LINE_AA)
@@ -144,7 +155,7 @@ def start_PPTrecording(filename):
     app.Presentations.Open(FileName=filename)
     app.ActivePresentation.SlideShowSettings.Run()
 
-    basetest_len = 360
+    basetest_len = 10
     print("Trial Onset:", nowstr)
     fixed = sum(fixed_times) / 1000
     vars = fixed + pre_stim_t + tone_dur + pre_rew_av_t + rew_av_t + post_rew_av_t
@@ -165,7 +176,7 @@ def start_PPTrecording(filename):
             basetest1_vthread = VideoRecorder('baseline_1', '')
             basetest1_data = [basetest1_vthread.video_filename, fish_id, sex, genotype, run_date, run_time, exp_init,
                               'na', 'na', 'na', 'na', cam_id, notes, 'na', 'na', 'na', 'na', 'na', 'na', 'na', 'na',
-                              'na', 'na', basetest_len]
+                              'na', 'na', 'na', 'na', basetest_len]
             trial_data.append(basetest1_data)
             video_files.append(basetest1_vthread.video_filename)
             app.SlideShowWindows(1).View.GotoSlide(1)
@@ -202,6 +213,8 @@ def start_PPTrecording(filename):
 
         win32api.Sleep((pre_stim_t * 1000) + 2000)  # pre-stimulus time
         app.SlideShowWindows(1).View.GotoSlide(this_run[1])  # advance to screen cue
+        global viscuePlaying
+        viscuePlaying = 1
         win32api.Sleep(fixed_times[0])  # 3s cue color
         app.SlideShowWindows(1).View.Next()  # next
         win32api.Sleep(fixed_times[1])  # .25s natural slide
@@ -209,6 +222,7 @@ def start_PPTrecording(filename):
         win32api.Sleep(fixed_times[2])  # 3s cue color
         app.SlideShowWindows(1).View.Next()  # advance to sound slide
         win32api.Sleep(fixed_times[3]) # 6s natural slide
+        viscuePlaying = 0
         app.SlideShowWindows(1).View.Next()  # play CF/FM
         global tonePlaying
         tonePlaying = 1
@@ -227,7 +241,7 @@ def start_PPTrecording(filename):
 
         run_data = [video_thread.video_filename, fish_id, sex, genotype, run_date, run_time, exp_init,
                     num_runs, min_iti, max_iti, iti, cam_id, notes, pre_stim_t, cue_t, tone_dur, pre_rew_av_t,
-                    rew_av_t, post_rew_av_t, min(tone_frames), max(tone_frames), min(video_frames), max(video_frames),
+                    rew_av_t, post_rew_av_t, min(cue_frames), max(cue_frames), min(tone_frames), max(tone_frames), min(video_frames), max(video_frames),
                     'na']
         trial_data.append(run_data)
 
@@ -254,7 +268,7 @@ def start_PPTrecording(filename):
                     basetest2_vthread = VideoRecorder('baseline_2', '')
                     basetest2_data = [basetest2_vthread.video_filename, fish_id, sex, genotype, run_date, run_time,
                                       exp_init, 'na', 'na', 'na', 'na', cam_id, notes, 'na', 'na', 'na', 'na', 'na', 'na',
-                                      'na', 'na', 'na', 'na', basetest_len]
+                                      'na', 'na', 'na', 'na', 'na', 'na', basetest_len]
                     trial_data.append(basetest2_data)
                     video_files.append(basetest2_vthread.video_filename)
                     app.SlideShowWindows(1).View.GotoSlide(1)
@@ -273,8 +287,9 @@ def main_():
     trial_df = pd.DataFrame(trial_data, columns=['vid_file', 'fish_id', 'sex', 'genotype', 'date', 'time',
                                                  'exp_init','num_runs', 'min_iti', 'max_iti', 'iti', 'cam_id', 'notes',
                                                  'pre_stim_t', 'cue_t', 'tone_dur', 'pre_rew_av_t', 'rew_av_t',
-                                                 'post_rew_av_t','tone_start_frame', 'tone_stop_frame',
-                                                 'video_start_frame', 'video_stop_frame', 'basetest_len'])
+                                                 'post_rew_av_t', 'cue_start_frame', 'cue_stop_frame',
+                                                 'tone_start_frame', 'tone_stop_frame', 'video_start_frame',
+                                                 'video_stop_frame', 'basetest_len'])
     trial_df.index.name = 'run_id'
     trial_df.to_csv(transcript_fn)
 
@@ -526,4 +541,3 @@ def startup():
 
 startup()
 supermain()
-
