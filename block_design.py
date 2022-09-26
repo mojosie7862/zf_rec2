@@ -174,7 +174,7 @@ def start_PPTrecording(filename):
             run_date = today.strftime('%m-%d-%y')
             run_time = today.strftime('%H.%M.%S')
             basetest1_vthread = VideoRecorder('baseline_1', '')
-            basetest1_data = [basetest1_vthread.video_filename, fish_id, sex, genotype, run_date, run_time, exp_init,
+            basetest1_data = [basetest1_vthread.video_filename, fish_id, sex, genotype, 'na', 'na', run_date, run_time, exp_init,
                               'na', 'na', 'na', 'na', cam_id, notes, 'na', 'na', 'na', 'na', 'na', 'na', 'na', 'na',
                               'na', 'na', 'na', 'na', basetest_len]
             trial_data.append(basetest1_data)
@@ -205,8 +205,11 @@ def start_PPTrecording(filename):
         run_time = today.strftime('%H.%M.%S')
 
         print('run', i + 1, ':', this_run[0], 'ITI:', iti, "onset:", run_time)
-        r = str(i+1)
-        video_thread = VideoRecorder(this_run[0], 'r'+r)
+        if i < 10:
+            r = '0'+str(i+1)
+        else:
+            r = str(i+1)
+        video_thread = VideoRecorder('r'+r, this_run[0])
         video_files.append(video_thread.video_filename)
 
         video_thread.start()
@@ -239,7 +242,10 @@ def start_PPTrecording(filename):
         videoPlaying = 0
         app.SlideShowWindows(1).View.Next()  # advance to natural slide
 
-        run_data = [video_thread.video_filename, fish_id, sex, genotype, run_date, run_time, exp_init,
+        run_number = i+1
+        run_paradigm = this_run[0]
+
+        run_data = [video_thread.video_filename, fish_id, sex, genotype, run_number, run_date, run_time, run_paradigm, exp_init,
                     num_runs, min_iti, max_iti, iti, cam_id, notes, pre_stim_t, cue_t, tone_dur, pre_rew_av_t,
                     rew_av_t, post_rew_av_t, min(cue_frames), max(cue_frames), min(tone_frames), max(tone_frames), min(video_frames), max(video_frames),
                     'na']
@@ -266,7 +272,7 @@ def start_PPTrecording(filename):
                     run_date = today.strftime('%m-%d-%y')
                     run_time = today.strftime('%H.%M.%S')
                     basetest2_vthread = VideoRecorder('baseline_2', '')
-                    basetest2_data = [basetest2_vthread.video_filename, fish_id, sex, genotype, run_date, run_time,
+                    basetest2_data = [basetest2_vthread.video_filename, fish_id, sex, genotype, 'na', 'na', run_date, run_time,
                                       exp_init, 'na', 'na', 'na', 'na', cam_id, notes, 'na', 'na', 'na', 'na', 'na', 'na',
                                       'na', 'na', 'na', 'na', 'na', 'na', basetest_len]
                     trial_data.append(basetest2_data)
@@ -284,10 +290,10 @@ def main_():
     start_PPTrecording(filename)
 
     transcript_fn = 'transcript' + str(datetime.now().strftime('%Y-%m-%d_%H.%M')) + '.csv'
-    trial_df = pd.DataFrame(trial_data, columns=['vid_file', 'fish_id', 'sex', 'genotype', 'date', 'time',
-                                                 'exp_init','num_runs', 'min_iti', 'max_iti', 'iti', 'cam_id', 'notes',
-                                                 'pre_stim_t', 'cue_t', 'tone_dur', 'pre_rew_av_t', 'rew_av_t',
-                                                 'post_rew_av_t', 'cue_start_frame', 'cue_stop_frame',
+    trial_df = pd.DataFrame(trial_data, columns=['vid_file', 'fish_id', 'sex', 'genotype', 'run_number', 'run_paradigm',
+                                                 'date', 'time', 'exp_init','num_runs', 'min_iti', 'max_iti', 'iti',
+                                                 'cam_id', 'notes', 'pre_stim_t', 'cue_t', 'tone_dur', 'pre_rew_av_t',
+                                                 'rew_av_t', 'post_rew_av_t', 'cue_start_frame', 'cue_stop_frame',
                                                  'tone_start_frame', 'tone_stop_frame', 'video_start_frame',
                                                  'video_stop_frame', 'basetest_len'])
     trial_df.index.name = 'run_id'
