@@ -14,7 +14,7 @@ import pandas as pd
 
 camwidth = 640
 camheight = 480
-toggle = 1;
+toggle = 1
 recordingIndex = -999
 cam_id = 0
 exp_init = ""
@@ -29,13 +29,18 @@ genotype = ""
 notes = ""
 
 cue_t = 12.25
-tone_dur = 6.5
+tone_dur = 6
 pre_stim_t = 4
 pre_rew_av_t = 2
 rew_av_t = 10
 post_rew_av_t = 4
 
 filename = r'C:\Users\Kanwal\PycharmProjects\zebradata\paradigms_white.pptx'
+if len(sys.argv) > 2:
+    if sys.argv[2] == 'control_fm':
+        filename = r'C:\Users\Kanwal\PycharmProjects\zebradata\paradigms_aversion_fm_white.pptx'
+    elif sys.argv[2] == 'control_cf':
+        filename = r'C:\Users\Kanwal\PycharmProjects\zebradata\paradigms_reward_cf_white.pptx'
 
 viscuePlaying = 0
 tonePlaying = 0
@@ -62,10 +67,10 @@ tone_frames = []
 global video_frames
 video_frames = []
 
-now = datetime.now()
-nowstr = now.strftime("%Y-%m-%d %H:%M:%S %p")
+nowstr = datetime.now().strftime("%Y-%m-%d %H:%M:%S %p")
 
-class VideoRecorder():
+
+class VideoRecorder:
 
     # Video class based on openCV
     def __init__(self, r, paradigm):
@@ -79,43 +84,42 @@ class VideoRecorder():
         self.video_cap = cv2.VideoCapture(self.device_index)
         self.video_writer = cv2.VideoWriter_fourcc(*self.fourcc)
         self.video_out = cv2.VideoWriter(self.video_filename, self.video_writer, self.fps, self.frameSize)
-        self.frame_counts = 1
+        self.frame_times = []
+        self.frame_count = 0
         self.start_time = time.time()
         self.font = cv2.FONT_HERSHEY_PLAIN
         self.xy = 10, 10
 
     # Video starts being recorded
     def record(self):
-        frame_counter = 0
-        while (self.open == True):
+        while self.open:
             ret, video_frame = self.video_cap.read()
-
-            frame_counter += 1
+            self.frame_count += 1
+            frame_time = datetime.now().strftime("%H:%M:%S:%f")
             if viscuePlaying == 1:
-                cv2.putText(video_frame, str(datetime.now()), (20, 40),
+                cv2.putText(video_frame, frame_time, (20, 40),
                             self.font, 2, (255, 255, 255), 2, cv2.LINE_AA)
-                cue_frames.append(frame_counter)
+                cue_frames.append(self.frame_count)
 
             elif tonePlaying == 1:
-                cv2.putText(video_frame, str(datetime.now()), (20, 40),
+                cv2.putText(video_frame, frame_time, (20, 40),
                             self.font, 2, (255, 255, 255), 2, cv2.LINE_AA)
                 cv2.circle(video_frame, (620, 20), 20, (0, 0, 255), -1)
-                tone_frames.append(frame_counter)
+                tone_frames.append(self.frame_count)
 
             elif videoPlaying == 1:
-                cv2.putText(video_frame, str(datetime.now()), (20, 40),
+                cv2.putText(video_frame, frame_time, (20, 40),
                             self.font, 2, (255, 255, 255), 2, cv2.LINE_AA)
                 cv2.rectangle(video_frame, (580, 10), (620, 40), (255, 0, 0), -1)
-                video_frames.append(frame_counter)
+                video_frames.append(self.frame_count)
 
             else:
-                cv2.putText(video_frame, str(datetime.now()), (20, 40),
+                cv2.putText(video_frame, frame_time, (20, 40),
                             self.font, 2, (255, 255, 255), 2, cv2.LINE_AA)
+            self.frame_times.append(frame_time)
 
-            if ret == True:
-
+            if ret:
                 self.video_out.write(video_frame)
-                self.frame_counts += 1
                 time.sleep(0.05)
                 gray = cv2.cvtColor(video_frame, cv2.COLOR_BGR2GRAY)
                 cv2.imshow('video_frame', gray)
@@ -127,7 +131,7 @@ class VideoRecorder():
     # Finishes the video recording therefore the thread too
     def stop(self):
 
-        if self.open == True:
+        if self.open:
 
             self.open = False
             self.video_out.release()
@@ -142,11 +146,10 @@ class VideoRecorder():
         video_thread = threading.Thread(target=self.record)
         video_thread.start()
 
-
 def start_PPTrecording(filename):
 
-    paradigm_slides = [['cf', 9], ['dfm', 2]]
-    all_runs = [['cf', 0], ['dfm', 0]]
+    paradigm_slides = [['cf', 9], ['fm', 2]]
+    all_runs = [['cf', 0], ['fm', 0]]
 
     fixed_times = [3000, 250, 3000, 6000, 1]
     pythoncom.CoInitialize()
@@ -158,12 +161,12 @@ def start_PPTrecording(filename):
     basetest_len = 10
     print("Trial Onset:", nowstr)
     fixed = sum(fixed_times) / 1000
-    vars = fixed + pre_stim_t + tone_dur + pre_rew_av_t + rew_av_t + post_rew_av_t
+    v = fixed + pre_stim_t + tone_dur + pre_rew_av_t + rew_av_t + post_rew_av_t
     if len(sys.argv) > 1:
         if sys.argv[1] == 'baseline_tests':
-            vars += basetest_len*2
-    trial_min = (vars + min_iti) * num_runs
-    trial_max = (vars + max_iti) * num_runs
+            v += basetest_len*2
+    trial_min = (v + min_iti) * num_runs
+    trial_max = (v + max_iti) * num_runs
     print("Length of Trial:", round((trial_min / 60), 1), "-", round((trial_max / 60), 1), "minutes")
     print("Number of Runs:", num_runs)
 
@@ -172,22 +175,25 @@ def start_PPTrecording(filename):
         if sys.argv[1] == 'baseline_tests':
             today = datetime.today()
             run_date = today.strftime('%m-%d-%y')
-            run_time = today.strftime('%H.%M.%S')
-            basetest1_vthread = VideoRecorder('baseline_1', '')
-            basetest1_data = [basetest1_vthread.video_filename, fish_id, sex, genotype, 'na', 'na', run_date, run_time, exp_init,
+            basetest1_vthread = VideoRecorder('', 'baseline_1')
+            basetest1_data = [basetest1_vthread.video_filename, fish_id, sex, genotype, 'na', 'b1', run_date, exp_init,
                               'na', 'na', 'na', 'na', cam_id, notes, 'na', 'na', 'na', 'na', 'na', 'na', 'na', 'na',
                               'na', 'na', 'na', 'na', basetest_len]
-            trial_data.append(basetest1_data)
+
             video_files.append(basetest1_vthread.video_filename)
             app.SlideShowWindows(1).View.GotoSlide(1)
             basetest1_vthread.start()
             print("1st baseline recording...")
-            time.sleep(basetest_len)  # change to 360 for true trials
+            time.sleep(basetest_len)
             basetest1_vthread.stop()
+            basetest1_data.append(basetest1_vthread.frame_times[0])
+            basetest1_data.append(basetest1_vthread.frame_times[-1])
+            basetest1_data.append(basetest1_vthread.frame_count)
+            trial_data.append(basetest1_data)
 
     # loop through paradigm presentations and record from pre_stim_t to post rew_av_t
     sm_block = int(num_runs / 4)
-    block_paradigms = [['cf', 9], ['dfm', 2]]
+    block_paradigms = [['cf', 9], ['fm', 2]]
     block1 = random.choice(block_paradigms)
     block_paradigms.pop(block_paradigms.index(block1))
     block2 = block_paradigms[0]
@@ -200,16 +206,21 @@ def start_PPTrecording(filename):
             this_run = random.choice(paradigm_slides)
 
         iti = random.randint(min_iti, max_iti)
-        today = datetime.today()
-        run_date = today.strftime('%m-%d-%y')
-        run_time = today.strftime('%H.%M.%S')
+        run_date = datetime.today().strftime('%m-%d-%y')
 
-        print('run', i + 1, ':', this_run[0], 'ITI:', iti, "onset:", run_time)
-        if i < 10:
+        if len(sys.argv) > 2:
+            if sys.argv[2] == 'control_fm':
+                this_run[0] = 'fm'
+            if sys.argv[2] == 'control_cf':
+                this_run[0] = 'cf'
+
+        print('run', i + 1, ':', this_run[0], 'ITI:', iti, "onset:", datetime.today().strftime('%H.%M.%S'))
+        if i < 9:
             r = '0'+str(i+1)
         else:
             r = str(i+1)
-        video_thread = VideoRecorder('r'+r, this_run[0])
+
+        video_thread = VideoRecorder('_r'+r, this_run[0])
         video_files.append(video_thread.video_filename)
 
         video_thread.start()
@@ -224,7 +235,7 @@ def start_PPTrecording(filename):
         app.SlideShowWindows(1).View.Next()  # next
         win32api.Sleep(fixed_times[2])  # 3s cue color
         app.SlideShowWindows(1).View.Next()  # advance to sound slide
-        win32api.Sleep(fixed_times[3]) # 6s natural slide
+        win32api.Sleep(fixed_times[3])  # 6s natural slide
         viscuePlaying = 0
         app.SlideShowWindows(1).View.Next()  # play CF/FM
         global tonePlaying
@@ -244,12 +255,16 @@ def start_PPTrecording(filename):
 
         run_number = i+1
         run_paradigm = this_run[0]
+        if len(sys.argv) > 2:
+            if sys.argv[2] == 'control_fm':
+                run_paradigm = 'fm'
+            if sys.argv[2] == 'control_cf':
+                run_paradigm = 'cf'
 
-        run_data = [video_thread.video_filename, fish_id, sex, genotype, run_number, run_date, run_time, run_paradigm, exp_init,
+        run_data = [video_thread.video_filename, fish_id, sex, genotype, run_number, run_paradigm, run_date, exp_init,
                     num_runs, min_iti, max_iti, iti, cam_id, notes, pre_stim_t, cue_t, tone_dur, pre_rew_av_t,
-                    rew_av_t, post_rew_av_t, min(cue_frames), max(cue_frames), min(tone_frames), max(tone_frames), min(video_frames), max(video_frames),
-                    'na']
-        trial_data.append(run_data)
+                    rew_av_t, post_rew_av_t, min(cue_frames), max(cue_frames), min(tone_frames), max(tone_frames),
+                    min(video_frames), max(video_frames), 'na']
 
         for y, j in enumerate(all_runs):
             if this_run[0] == j[0]:
@@ -260,9 +275,18 @@ def start_PPTrecording(filename):
 
         time.sleep(post_rew_av_t)
         video_thread.stop()
+        run_data.append(video_thread.frame_times[0])
+        run_data.append(video_thread.frame_times[-1])
+        run_data.append(video_thread.frame_count)
+        trial_data.append(run_data)
 
         if i != num_runs-1:
             time.sleep(iti - post_rew_av_t)
+
+        if len(sys.argv) > 2:
+            if sys.argv[2] == 'control_fm' or sys.argv[2] == 'control_cf':
+                if i == num_runs - 1:
+                    all_runs = []
 
         if len(all_runs) == 0:
             app.SlideShowWindows(1).View.GotoSlide(1)
@@ -270,33 +294,53 @@ def start_PPTrecording(filename):
                 if sys.argv[1] == 'baseline_tests':
                     today = datetime.today()
                     run_date = today.strftime('%m-%d-%y')
-                    run_time = today.strftime('%H.%M.%S')
-                    basetest2_vthread = VideoRecorder('baseline_2', '')
-                    basetest2_data = [basetest2_vthread.video_filename, fish_id, sex, genotype, 'na', 'na', run_date, run_time,
-                                      exp_init, 'na', 'na', 'na', 'na', cam_id, notes, 'na', 'na', 'na', 'na', 'na', 'na',
-                                      'na', 'na', 'na', 'na', 'na', 'na', basetest_len]
-                    trial_data.append(basetest2_data)
+                    basetest2_vthread = VideoRecorder('', 'baseline_2')
+                    basetest2_data = [basetest2_vthread.video_filename, fish_id, sex, genotype, 'na', 'b2', run_date,
+                                      exp_init, 'na', 'na', 'na', 'na', cam_id, notes, 'na', 'na', 'na', 'na', 'na',
+                                      'na', 'na', 'na', 'na', 'na', 'na', 'na', basetest_len]
+
                     video_files.append(basetest2_vthread.video_filename)
                     app.SlideShowWindows(1).View.GotoSlide(1)
                     basetest2_vthread.start()
                     print("2nd baseline recording...")
                     time.sleep(basetest_len)
                     basetest2_vthread.stop()
+                    basetest2_data.append(basetest2_vthread.frame_times[0])
+                    basetest2_data.append(basetest2_vthread.frame_times[-1])
+                    basetest2_data.append(basetest2_vthread.frame_count)
+                    trial_data.append(basetest2_data)
+
             pythoncom.CoUninitialize()
             print("Presentation finished.")
             break
 
+
 def main_():
     start_PPTrecording(filename)
+    run_id_col = []
+    for i in range(len(trial_data)):
+        if i == 0:
+            if sys.argv[1] == 'baseline_tests':
+                r = 'b1'
+        elif i == len(trial_data)-1:
+            if sys.argv[1] == 'baseline_tests':
+                r = 'b2'
+        else:
+            if sys.argv[1] == 'baseline_tests':
+                r = 'r'+str(i+1)
+            r = 'r'+str(i)
+        run_id = fish_id+'_'+r
+        run_id_col.append(run_id)
 
     transcript_fn = 'transcript' + str(datetime.now().strftime('%Y-%m-%d_%H.%M')) + '.csv'
     trial_df = pd.DataFrame(trial_data, columns=['vid_file', 'fish_id', 'sex', 'genotype', 'run_number', 'run_paradigm',
-                                                 'date', 'time', 'exp_init','num_runs', 'min_iti', 'max_iti', 'iti',
+                                                 'date', 'exp_init', 'num_runs', 'min_iti', 'max_iti', 'iti',
                                                  'cam_id', 'notes', 'pre_stim_t', 'cue_t', 'tone_dur', 'pre_rew_av_t',
                                                  'rew_av_t', 'post_rew_av_t', 'cue_start_frame', 'cue_stop_frame',
                                                  'tone_start_frame', 'tone_stop_frame', 'video_start_frame',
-                                                 'video_stop_frame', 'basetest_len'])
-    trial_df.index.name = 'run_id'
+                                                 'video_stop_frame', 'basetest_len', 'run_start', 'run_stop', 'total_frames'])
+    trial_df['run_id'] = run_id_col
+    trial_df = trial_df.set_index('run_id')
     trial_df.to_csv(transcript_fn)
 
     video_files.append(transcript_fn)
@@ -305,7 +349,6 @@ def main_():
     path = os.path.join(parent_dir, directory)
     os.mkdir(path)
     print("Directory '% s' created (found in C:/Users/Kanwal/Dropbox/aud_discrim_cond_data)" % directory)
-
 
     for file in video_files:
         original = parent_dir + file
@@ -326,7 +369,7 @@ def tkinter_start():
     def action():
         global toggle
         toggle *= -1
-        if (toggle == -1):
+        if toggle == -1:
             print("Stopped Recording, exiting program")
             os._exit(0)
             cv2.destroyAllWindows()
@@ -358,59 +401,59 @@ def startup():
 
     def c():
         global fish_id
-        if (not (txt7.get() == "")):
+        if not (txt7.get() == ""):
             fish_id = txt7.get()
 
         global sex
-        if (not (txt8.get() == "")):
+        if not (txt8.get() == ""):
             sex = txt8.get()
 
         global genotype
-        if (not (txt9.get() == "")):
+        if not (txt9.get() == ""):
             genotype = txt9.get()
 
         global exp_init
-        if (not (txt3.get() == "")):
+        if not (txt3.get() == ""):
             exp_init = txt3.get()
 
         global num_runs
-        if (not (txt4.get() == "")):
+        if not (txt4.get() == ""):
             num_runs = int(txt4.get())
 
         global min_iti
-        if (not (txt5.get() == "")):
+        if not (txt5.get() == ""):
             min_iti = int(txt5.get())
 
         global max_iti
-        if (not (txt51.get() == "")):
+        if not (txt51.get() == ""):
             max_iti = int(txt51.get())
 
         global cam_id
-        if (not (txt1.get() == "")):
+        if not (txt1.get() == ""):
             cam_id = int(txt1.get())
 
         global notes
-        if (not (txt10.get() == "")):
+        if not (txt10.get() == ""):
             notes = txt10.get()
 
         global pre_stim_t
-        if (not (txt52.get() == "")):
+        if not (txt52.get() == ""):
             pre_stim_t = int(txt52.get())
 
         global tone_dur
-        if (not (txt101.get() == "")):
+        if not (txt101.get() == ""):
             tone_dur = int(txt101.get())
 
         global pre_rew_av_t
-        if (not (txt53.get() == "")):
+        if not (txt53.get() == ""):
             pre_rew_av_t = int(txt53.get())
 
         global rew_av_t
-        if (not (txt54.get() == "")):
+        if not (txt54.get() == ""):
             rew_av_t = int(txt54.get())
 
         global post_rew_av_t
-        if (not (txt100.get() == "")):
+        if not (txt100.get() == ""):
             post_rew_av_t = int(txt100.get())
 
         top1.destroy()
